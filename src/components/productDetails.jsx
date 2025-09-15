@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
 import Navbar from "./navbar";
 import { toast, Bounce } from "react-toastify";
 
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [error, setError] = useState(null);
   function addToCart(product) {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingProductIndex = cart.findIndex(
@@ -37,9 +37,20 @@ export default function ProductDetails() {
 
   useEffect(() => {
     fetch(`https://fakestoreapi.com/products/${id}`)
-      .then((res) => res.json())
-      .then((data) => setProduct(data));
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return res.json();
+      })
+      .then((data) => setProduct(data))
+      .catch(() => setError("Failed to load product"));
   }, [id]);
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
   if (!product) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black/20 z-50 min-h-full">
